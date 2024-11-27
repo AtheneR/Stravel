@@ -2,8 +2,6 @@
 	include_once('header.php');
 ?>
 
-<!-- <form method="POST"> -->
-
 <?php if (!empty($message)): ?>
     <p style="color:red"><?= $message ?></p>
 <?php endif; ?>
@@ -13,18 +11,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Starvel</title>
     <link rel="stylesheet" href="visuel.css">
-    <link rel="icon" type="image/png" href="logo_starvel.webp">
+    <link rel="icon" type="image/png" href="logo_couleur.png">
 </head>
-
-
 
 <div class="container">
         <div class="informations">
         <form method="POST" action="inscription_utilisateur.php">
         <h2>Inscription</h2>
-
-            <!-- champs pour l'adresse mail et le mot de passe, on met les deux en required par sécurité-->
-        <div>
+	<div>
             <div>  
             <label for="nom">Nom :</label><br>
             <input type="text" id="nom" name="nom" placeholder="Rousseau" required>
@@ -48,7 +42,7 @@
             <div class="commentaire">
                 <label for="mot_de_passe">Mot de passe : </label>
                 <input type="password" id="mot_de_passe" name="mot_de_passe" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{5,}" required><br>
-                <p>Le mot de passe doit contenir au moins 1 chiffre, une lettre majuscule, une lettre minuscule, et doit avoir au moins 8 caractères en tout.</p>
+                <p>Le mot de passe doit contenir au moins 1 chiffre, 1 lettre majuscule, 1 lettre minuscule, et doit avoir au moins 8 caractères en tout.</p>
             </div>
             <div>
                 <p class="centrecom">Préférence de communication :</p>
