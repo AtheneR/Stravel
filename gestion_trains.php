@@ -48,9 +48,8 @@
         //     ':jour_trajet' => $jour_trajet,
         //     ':type_train' => $type_train,
         // ]);
-        if (!empty($gare_depart) && !empty($gare_arrivee) && !empty($jour_trajet) &&
-            !empty($horaire_depart) && !empty($horaire_arrivee) && !empty($type_train) && !empty($capacite)) {
-            
+        // if (!empty($gare_depart) && !empty($gare_arrivee) && !empty($jour_trajet) && !empty($horaire_depart) && !empty($horaire_arrivee) && !empty($type_train) && !empty($capacite)) {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['valider'])) {    
             $sql = "INSERT INTO train (nb_places, id_gare_depart, id_gare_arrivee, heure_depart, heure_arrivee, jour_trajet, type) 
                     VALUES (:nb_places, :gare_depart, :gare_arrivee, :horaire_depart, :horaire_arrivee, :jour_trajet, :type_train)";
             $bdd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -181,8 +180,35 @@
         }
     }
 
+    // if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['modifier']) && isset($_POST['id_train'])) {
+    //     $id_train = $_POST['id_train'];
+    //     $sql_details = "
+    //         SELECT 
+    //             t.jour_trajet, 
+    //             t.nb_places,
+    //             t.heure_depart, 
+    //             t.heure_arrivee, 
+    //             t.type, 
+    //             g1.nom AS gare_depart, 
+    //             g2.nom AS gare_arrivee
+    //         FROM train t
+    //         LEFT JOIN gare g1 ON t.id_gare_depart = g1.id_gare
+    //         LEFT JOIN gare g2 ON t.id_gare_arrivee = g2.id_gare
+    //         WHERE t.id_train = :id_train
+    //     ";
+
+    //     $stmt_details = $bdd->prepare($sql_details);
+    //     $stmt_details->execute([
+    //         'id_train' => $id_train
+    //     ]);
+    //     $train_details_modif = $stmt_details->fetch();
+    //     var_dump($train_details_modif);
+    //     var_dump($id_train);
+    // }
+
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['modifier']) && isset($_POST['id_train'])) {
         $id_train = $_POST['id_train'];
+    
         $sql_details = "
             SELECT 
                 t.jour_trajet, 
@@ -190,24 +216,65 @@
                 t.heure_depart, 
                 t.heure_arrivee, 
                 t.type, 
-                g1.nom AS gare_depart, 
-                g2.nom AS gare_arrivee
+                t.id_gare_depart, 
+                t.id_gare_arrivee
             FROM train t
-            LEFT JOIN gare g1 ON t.id_gare_depart = g1.id_gare
-            LEFT JOIN gare g2 ON t.id_gare_arrivee = g2.id_gare
             WHERE t.id_train = :id_train
         ";
-
+    
         $stmt_details = $bdd->prepare($sql_details);
         $stmt_details->execute([
             'id_train' => $id_train
         ]);
+    
         $train_details_modif = $stmt_details->fetch();
-        var_dump($train_details_modif);
-        var_dump($id_train);
+    
+        // var_dump($train_details_modif);
+        // var_dump($id_train);
     }
     
-
+    
+    if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['modification']) && isset($_POST['id_train'])) {
+        print_r("passage\n");
+        $gare_depart = !empty($_POST["gare_depart"]) ? $_POST["gare_depart"] : $train_details_modif['gare_depart'];
+        $gare_arrivee = !empty($_POST["gare_arrivee"]) ? $_POST["gare_arrivee"] : $train_details_modif['gare_arrivee'];
+        $jour_trajet = !empty($_POST["jour_trajet"]) ? $_POST["jour_trajet"] : $train_details_modif['jour_trajet'];
+        $horaire_depart = !empty($_POST["horaire_depart"]) ? $_POST["horaire_depart"] : $train_details_modif['heure_depart'];
+        $horaire_arrivee = !empty($_POST["horaire_arrivee"]) ? $_POST["horaire_arrivee"] : $train_details_modif['heure_arrivee'];
+        $type = !empty($_POST["type"]) ? $_POST["type"] : $train_details_modif['type'];
+        $nb_places = !empty($_POST["nb_places"]) ? $_POST["nb_places"] : $train_details_modif['nb_places'];
+        $id_train = $_POST['id_train'];
+    
+        $sql = "UPDATE train 
+                SET id_gare_depart = :gare_depart, 
+                    id_gare_arrivee = :gare_arrivee, 
+                    jour_trajet = :jour_trajet, 
+                    heure_depart = :horaire_depart, 
+                    heure_arrivee = :horaire_arrivee, 
+                    type = :type, 
+                    nb_places = :nb_places 
+                WHERE id_train = :id_train";
+    
+        try {
+            $bdd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $requeteMiseAJour = $bdd->prepare($sql);
+            $requeteMiseAJour->execute([
+                'gare_depart' => $gare_depart,
+                'gare_arrivee' => $gare_arrivee,
+                'jour_trajet' => $jour_trajet,
+                'horaire_depart' => $horaire_depart,
+                'horaire_arrivee' => $horaire_arrivee,
+                'type' => $type,
+                'nb_places' => $nb_places,
+                'id_train' => $id_train,
+            ]);
+            var_dump($requeteMiseAJour);
+            header("Location: gestion_trains.php?reussite_modif=1");
+            exit();
+        } catch (PDOException $e) {
+            $message = "Erreur lors de la mise à jour du train : " . $e->getMessage();
+        }
+    }
 ?>
 
 <head>
@@ -239,7 +306,7 @@
         <?php elseif (isset($_GET['reussite_suppr']) && $_GET['reussite_suppr'] == 1): ?>
             <h3>Le train a bien été supprimé.</h3>
             <a href="gestion_trains.php" class="action-button">Retour</a>
-        <?php elseif (!$afficher_formulaire_ajout && !$afficher_formulaire_modif && !$afficher_formulaire_suppr && !$train_details_suppr && !$train_details_modif): ?>
+        <?php elseif (!$afficher_formulaire_ajout && !$afficher_formulaire_modif && !$afficher_formulaire_suppr && !$train_details_suppr && !$train_details_modif && !isset($_POST['modification'])): ?>
             <div class="actions">
                 <form method="POST" style="display: inline;">
                     <button type="submit" name="ajouter_train" class="action-button">Ajouter un train</button>
@@ -304,9 +371,10 @@
                     <input type="number" id="capacite" name="capacite" min="1" required>
                 </div>
                 <div class="form-group">
-                    <button type="submit" class="action-button">Valider</button>
+                    <button type="submit" name="valider" class="action-button">Valider</button>
                     <a href="gestion_trains.php" class="action-button">Retour</a>
                 </div>
+
             </form>
         <?php elseif($afficher_formulaire_suppr): ?>
             <table>
@@ -381,12 +449,14 @@
                 <h3>Détails du trajet</h3>
                 <div class="form-group"> 
                     <label for="gare_depart">Gare de départ :</label><br>
-                    <select id="gare_depart" name="gare_depart" required>
-                        <option value="">Sélectionnez une gare</option>
+                    <select id="gare_depart" name="gare_depart">
+                        <option value="" disabled <?= empty($train_details_modif['id_gare_depart']) ? 'selected' : ''; ?>>
+                            Sélectionnez une gare
+                        </option>
                         <?php if (!empty($gares)): ?>
                             <?php foreach ($gares as $gare): ?>
-                                <option value="<?= $gare['id_gare']; ?>"
-                                    <?php if ($gare['id_gare'] == $train_details_modif['gare_depart']): ?> selected <?php endif; ?>>
+                                <option value="<?= htmlspecialchars($gare['id_gare']); ?>"
+                                    <?= $gare['id_gare'] == $train_details_modif['id_gare_depart'] ? 'selected' : ''; ?>>
                                     <?= htmlspecialchars($gare['nom']); ?>
                                 </option>
                             <?php endforeach; ?>
@@ -395,13 +465,18 @@
                         <?php endif; ?>
                     </select>
                 </div>
-                <div class="form-group">
+                <div class="form-group"> 
                     <label for="gare_arrivee">Gare d'arrivée :</label><br>
-                    <select id="gare_arrivee" name="gare_arrivee" required>
-                        <option value="">Sélectionnez une gare</option>
+                    <select id="gare_arrivee" name="gare_arrivee">
+                        <option value="" disabled <?= empty($train_details_modif['id_gare_arrivee']) ? 'selected' : ''; ?>>
+                            Sélectionnez une gare
+                        </option>
                         <?php if (!empty($gares)): ?>
                             <?php foreach ($gares as $gare): ?>
-                                <option value="<?= $gare['id_gare']; ?>"><?= htmlspecialchars($gare['nom']); ?></option>
+                                <option value="<?= htmlspecialchars($gare['id_gare']); ?>"
+                                    <?= $gare['id_gare'] == $train_details_modif['id_gare_arrivee'] ? 'selected' : ''; ?>>
+                                    <?= htmlspecialchars($gare['nom']); ?>
+                                </option>
                             <?php endforeach; ?>
                         <?php else: ?>
                             <option value="">Aucune gare disponible</option>
@@ -414,23 +489,26 @@
                 </div>
                 <div class="form-group">
                     <label for="horaire_depart">Horaire de départ :</label><br>
-                    <input type="time" id="horaire_depart" name="horaire_depart" required>
+                    <input type="time" id="horaire_depart" name="horaire_depart" 
+                        value="<?= htmlspecialchars(substr($train_details_modif['heure_depart'] ?? '', 0, 5)) ?>">
                 </div>
                 <div class="form-group">
                     <label for="horaire_arrivee">Horaire d'arrivée :</label><br>
-                    <input type="time" id="horaire_arrivee" name="horaire_arrivee" required>
+                    <input type="time" id="horaire_arrivee" name="horaire_arrivee" 
+                        value="<?= htmlspecialchars(substr($train_details_modif['heure_arrivee'] ?? '', 0, 5)) ?>">
                 </div>
                 <div class="form-group">
                     <label for="type_train">Type de train :</label>
-                    <select id="type_train" name="type_train" required>
-                        <option value="TGV">TGV</option>
-                        <option value="Intercite">Intercite</option>
-                        <option value="TER">TER</option>
+                    <select id="type_train" name="type_train">
+                        <option value="TGV" <?= $train_details_modif['type'] === 'TGV' ? 'selected' : ''; ?>>TGV</option>
+                        <option value="Intercite" <?= $train_details_modif['type'] === 'Intercite' ? 'selected' : ''; ?>>Intercite</option>
+                        <option value="TER" <?= $train_details_modif['type'] === 'TER' ? 'selected' : ''; ?>>TER</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label for="capacite">Capacité :</label><br>
-                    <input type="number" id="capacite" name="capacite" min="1" required>
+                    <input type="number" id="capacite" name="capacite" min="1" 
+                        value="<?= htmlspecialchars($train_details_modif['nb_places'] ?? '') ?>">
                 </div>
                 <div class="form-group">
                     <input type="hidden" name="id_train" value="<?= htmlspecialchars($id_train); ?>">
@@ -438,6 +516,7 @@
                 </div>
                 <a href="gestion_trains.php" class="action-button">Retour</a>
             </form>
+
         <?php endif; ?>
         <?php if ($message): ?>
             <p class="centre"><?= htmlspecialchars($message) ?></p>
