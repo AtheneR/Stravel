@@ -39,23 +39,12 @@
         $type_train = $_POST['type_train'];
         $capacite = $_POST['capacite'];
 
-        // print_r([
-        //     ':capacite' => $capacite,
-        //     ':gare_depart' => $gare_depart,
-        //     ':gare_arrivee' => $gare_arrivee,
-        //     ':horaire_depart' => $horaire_depart,
-        //     ':horaire_arrivee' => $horaire_arrivee,
-        //     ':jour_trajet' => $jour_trajet,
-        //     ':type_train' => $type_train,
-        // ]);
-        // if (!empty($gare_depart) && !empty($gare_arrivee) && !empty($jour_trajet) && !empty($horaire_depart) && !empty($horaire_arrivee) && !empty($type_train) && !empty($capacite)) {
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['valider'])) {    
             $sql = "INSERT INTO train (nb_places, id_gare_depart, id_gare_arrivee, heure_depart, heure_arrivee, jour_trajet, type) 
                     VALUES (:nb_places, :gare_depart, :gare_arrivee, :horaire_depart, :horaire_arrivee, :jour_trajet, :type_train)";
             $bdd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             try {
                 $stmt = $bdd->prepare($sql);
-
                 // echo "Requête exécutée : " . $sql . "\n";
 
                 $stmt->execute([
@@ -67,16 +56,6 @@
                     ':jour_trajet' => $jour_trajet,
                     ':type_train' => $type_train,
                 ]);
-        
-                // print_r([
-                //     ':capacite' => $capacite,
-                //     ':gare_depart' => $gare_depart,
-                //     ':gare_arrivee' => $gare_arrivee,
-                //     ':horaire_depart' => $horaire_depart,
-                //     ':horaire_arrivee' => $horaire_arrivee,
-                //     ':jour_trajet' => $jour_trajet,
-                //     ':type_train' => $type_train,
-                // ]);
 
                 header("Location: gestion_trains.php?reussite_ajout=1");
                 exit();
@@ -92,7 +71,6 @@
         $id_train = $_POST['id_train'];
         var_dump($id_train);
         $sql = "DELETE FROM train WHERE id_train = :id_train";
-
         try {
             $bdd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             $stmt = $bdd->prepare($sql);
@@ -131,7 +109,6 @@
     }
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_train']) && isset($_POST['suppr']) ) {
         // var_dump($_POST['id_train']);
-
         $id_train = $_POST['id_train'];
         $sql_details = "
             SELECT 
@@ -180,32 +157,6 @@
         }
     }
 
-    // if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['modifier']) && isset($_POST['id_train'])) {
-    //     $id_train = $_POST['id_train'];
-    //     $sql_details = "
-    //         SELECT 
-    //             t.jour_trajet, 
-    //             t.nb_places,
-    //             t.heure_depart, 
-    //             t.heure_arrivee, 
-    //             t.type, 
-    //             g1.nom AS gare_depart, 
-    //             g2.nom AS gare_arrivee
-    //         FROM train t
-    //         LEFT JOIN gare g1 ON t.id_gare_depart = g1.id_gare
-    //         LEFT JOIN gare g2 ON t.id_gare_arrivee = g2.id_gare
-    //         WHERE t.id_train = :id_train
-    //     ";
-
-    //     $stmt_details = $bdd->prepare($sql_details);
-    //     $stmt_details->execute([
-    //         'id_train' => $id_train
-    //     ]);
-    //     $train_details_modif = $stmt_details->fetch();
-    //     var_dump($train_details_modif);
-    //     var_dump($id_train);
-    // }
-
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['modifier']) && isset($_POST['id_train'])) {
         $id_train = $_POST['id_train'];
     
@@ -228,11 +179,9 @@
         ]);
     
         $train_details_modif = $stmt_details->fetch();
-    
         // var_dump($train_details_modif);
         // var_dump($id_train);
     }
-    
     
     if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['modification']) && isset($_POST['id_train'])) {
         print_r("passage\n");
@@ -285,14 +234,14 @@
     <link rel="icon" type="image/png" href="logo_couleur.png">
 </head>
 
-<!-- <nav class="navbar">
+<nav class="navbar">
     <a href="accueil_administrateur.php"><img src="logo_couleur.png" alt="Logo Starvel" class="logo" /></a>
     <a href="gestion_trains.php">Gestion des trains</a>
     <a href="gestion_gares.php">Gestion des gares</a>
     <a href="gestion_administrateur.php">Gestion des administrateurs</a>
     <a href="gestion_adresses.php">Gestion des adresses</a>
     <a href="connexion.php?action=logout" class="deconnexion">Déconnexion</a>
-</nav> -->
+</nav>
 
 <div class="container">
     <div class="informations">
