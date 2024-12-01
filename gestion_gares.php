@@ -79,7 +79,7 @@
 
     if (isset($_POST['suppression']) && !empty($_POST['id_gare'])) {
         $id_gare = $_POST['id_gare'];
-        var_dump($id_gare);
+        // var_dump($id_gare);
         $sql = "DELETE FROM gare WHERE id_gare = :id_gare";
         try {
             $bdd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -136,10 +136,10 @@
             ORDER BY gare.nom ASC
         ";
         $stmt = $bdd->prepare($sql);
-        var_dump($stmt);
+        // var_dump($stmt);
         $stmt->execute();
         $gares = $stmt->fetchAll();
-        var_dump($gares);
+        // var_dump($gares);
         if (empty($gares)) {
             $message = "Il n'y a aucune gare existante.";
         }
@@ -200,7 +200,7 @@
                 'acces_mobilite_reduite' => $acces_mobilite_reduite,
                 'id_gare' => $id_gare,
             ]);
-            var_dump($requeteMiseAJour);
+            // var_dump($requeteMiseAJour);
             header("Location: gestion_gares.php?reussite_modif=1");
             exit();
         } catch (PDOException $e) {
@@ -217,14 +217,14 @@
     <link rel="icon" type="image/png" href="logo_couleur.png">
 </head>
 
-<!-- <nav class="navbar">
+<nav class="navbar">
     <a href="accueil_administrateur.php"><img src="logo_couleur.png" alt="Logo Starvel" class="logo" /></a>
     <a href="gestion_trains.php">Gestion des gares</a>
     <a href="gestion_gares.php">Gestion des gares</a>
     <a href="gestion_administrateur.php">Gestion des administrateurs</a>
     <a href="gestion_adresses.php">Gestion des adresses</a>
     <a href="connexion.php?action=logout" class="deconnexion">Déconnexion</a>
-</nav> -->
+</nav>
 
 <div class="container">
     <div class="informations">
@@ -369,9 +369,9 @@
                     <input type="text" id="nom" name="nom" value="<?= htmlspecialchars($gare_details_modif['nom'] ?? '') ?>">
                 </div>
                 <div class="form-group"> 
-                    <label for="adresse">Adresse :</label><br>
-                    <select id="adresse" name="adresse">
-                        <option value="" disabled <?= empty($gare_details_modif['adresse']) ? 'selected' : ''; ?>>
+                    <label for="id_adresse">Adresse :</label><br>
+                    <select id="id_adresse" name="id_adresse">
+                        <option value="" disabled <?= empty($gare_details_modif['id_adresse']) ? 'selected' : ''; ?>>
                             Sélectionnez une adresse
                         </option>
                         <?php if (!empty($adresses)): ?>
@@ -409,8 +409,8 @@
                 <div class="form-group">
                     <label for="acces_mobilite_reduite">Accès pour les personnes à mobilité réduite :</label>
                     <select id="acces_mobilite_reduite" name="acces_mobilite_reduite">
-                        <option value="1" <?= $gare_details_modif['acces_mobilite_reduite'] === 1 ? 'selected' : ''; ?>>Oui</option>
-                        <option value="0" <?= $gare_details_modif['acces_mobilite_reduite'] === 0 ? 'selected' : ''; ?>>Non</option>
+                        <option value="1" <?= $gare_details_modif['acces_mobilite_reduite'] == 1 ? 'selected' : ''; ?>>Oui</option>
+                        <option value="0" <?= $gare_details_modif['acces_mobilite_reduite'] == 0 ? 'selected' : ''; ?>>Non</option>
                     </select>
                 </div>
                 <div class="form-group">
