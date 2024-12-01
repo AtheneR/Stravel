@@ -36,25 +36,25 @@
         $jour_trajet = $_POST['jour_trajet'];
         $horaire_depart = $_POST['horaire_depart'];
         $horaire_arrivee = $_POST['horaire_arrivee'];
-        $type_train = $_POST['type_train'];
-        $capacite = $_POST['capacite'];
+        $type = $_POST['type'];
+        $nb_places = $_POST['nb_places'];
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['valider'])) {    
             $sql = "INSERT INTO train (nb_places, id_gare_depart, id_gare_arrivee, heure_depart, heure_arrivee, jour_trajet, type) 
-                    VALUES (:nb_places, :gare_depart, :gare_arrivee, :horaire_depart, :horaire_arrivee, :jour_trajet, :type_train)";
+                    VALUES (:nb_places, :gare_depart, :gare_arrivee, :horaire_depart, :horaire_arrivee, :jour_trajet, :type)";
             $bdd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             try {
                 $stmt = $bdd->prepare($sql);
                 // echo "Requête exécutée : " . $sql . "\n";
 
                 $stmt->execute([
-                    ':nb_places' => $capacite,
+                    ':nb_places' => $nb_places,
                     ':gare_depart' => $gare_depart,
                     ':gare_arrivee' => $gare_arrivee,
                     ':horaire_depart' => $horaire_depart,
                     ':horaire_arrivee' => $horaire_arrivee,
                     ':jour_trajet' => $jour_trajet,
-                    ':type_train' => $type_train,
+                    ':type' => $type,
                 ]);
 
                 header("Location: gestion_trains.php?reussite_ajout=1");
@@ -69,7 +69,7 @@
 
     if (isset($_POST['suppression']) && !empty($_POST['id_train'])) {
         $id_train = $_POST['id_train'];
-        var_dump($id_train);
+        // var_dump($id_train);
         $sql = "DELETE FROM train WHERE id_train = :id_train";
         try {
             $bdd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -149,7 +149,9 @@
             ORDER BY t.jour_trajet ASC
         ";
         $stmt = $bdd->prepare($sql);
+        // print_r("\n");
         // var_dump($stmt);
+        // print_r("\n");
         $stmt->execute();
         $trains = $stmt->fetchAll();
         if (empty($trains)) {
@@ -179,6 +181,7 @@
         ]);
     
         $train_details_modif = $stmt_details->fetch();
+        // print_r("\n");
         // var_dump($train_details_modif);
         // var_dump($id_train);
     }
@@ -217,7 +220,7 @@
                 'nb_places' => $nb_places,
                 'id_train' => $id_train,
             ]);
-            var_dump($requeteMiseAJour);
+            // var_dump($requeteMiseAJour);
             header("Location: gestion_trains.php?reussite_modif=1");
             exit();
         } catch (PDOException $e) {
@@ -234,14 +237,14 @@
     <link rel="icon" type="image/png" href="logo_couleur.png">
 </head>
 
-<nav class="navbar">
+<!-- <nav class="navbar">
     <a href="accueil_administrateur.php"><img src="logo_couleur.png" alt="Logo Starvel" class="logo" /></a>
     <a href="gestion_trains.php">Gestion des trains</a>
     <a href="gestion_gares.php">Gestion des gares</a>
     <a href="gestion_administrateur.php">Gestion des administrateurs</a>
     <a href="gestion_adresses.php">Gestion des adresses</a>
     <a href="connexion.php?action=logout" class="deconnexion">Déconnexion</a>
-</nav>
+</nav> -->
 
 <div class="container">
     <div class="informations">
@@ -272,7 +275,7 @@
                 <div class="form-group">
                     <label for="gare_depart">Gare de départ :</label><br>
                     <select id="gare_depart" name="gare_depart" required>
-                        <option value="">Sélectionnez une gare</option>
+                        <option value="" disabled>Sélectionnez une gare</option>
                         <?php if (!empty($gares)): ?>
                             <?php foreach ($gares as $gare): ?>
                                 <option value="<?= $gare['id_gare']; ?>"><?= htmlspecialchars($gare['nom']); ?></option>
@@ -285,7 +288,7 @@
                 <div class="form-group">
                     <label for="gare_arrivee">Gare d'arrivée :</label><br>
                     <select id="gare_arrivee" name="gare_arrivee" required>
-                        <option value="">Sélectionnez une gare</option>
+                        <option value="" disabled>Sélectionnez une gare</option>
                         <?php if (!empty($gares)): ?>
                             <?php foreach ($gares as $gare): ?>
                                 <option value="<?= $gare['id_gare']; ?>"><?= htmlspecialchars($gare['nom']); ?></option>
@@ -308,16 +311,16 @@
                     <input type="time" id="horaire_arrivee" name="horaire_arrivee" required>
                 </div>
                 <div class="form-group">
-                    <label for="type_train">Type de train :</label>
-                    <select id="type_train" name="type_train" required>
+                    <label for="type">Type de train :</label><br>
+                    <select id="type" name="type" required>
                         <option value="TGV">TGV</option>
                         <option value="Intercite">Intercite</option>
                         <option value="TER">TER</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="capacite">Capacité :</label><br>
-                    <input type="number" id="capacite" name="capacite" min="1" required>
+                    <label for="nb_places">Capacité :</label><br>
+                    <input type="number" id="nb_places" name="nb_places" min="1" required>
                 </div>
                 <div class="form-group">
                     <button type="submit" name="valider" class="action-button">Valider</button>
@@ -447,16 +450,16 @@
                         value="<?= htmlspecialchars(substr($train_details_modif['heure_arrivee'] ?? '', 0, 5)) ?>">
                 </div>
                 <div class="form-group">
-                    <label for="type_train">Type de train :</label>
-                    <select id="type_train" name="type_train">
+                    <label for="type">Type de train :</label><br>
+                    <select id="type" name="type">
                         <option value="TGV" <?= $train_details_modif['type'] === 'TGV' ? 'selected' : ''; ?>>TGV</option>
                         <option value="Intercite" <?= $train_details_modif['type'] === 'Intercite' ? 'selected' : ''; ?>>Intercite</option>
                         <option value="TER" <?= $train_details_modif['type'] === 'TER' ? 'selected' : ''; ?>>TER</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="capacite">Capacité :</label><br>
-                    <input type="number" id="capacite" name="capacite" min="1" 
+                    <label for="nb_places">Capacité :</label><br>
+                    <input type="number" id="nb_places" name="nb_places" min="1" 
                         value="<?= htmlspecialchars($train_details_modif['nb_places'] ?? '') ?>">
                 </div>
                 <div class="form-group">
