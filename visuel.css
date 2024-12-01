@@ -3,23 +3,17 @@ body {
     background-color: #fffce7;
     margin: 0;
     padding: 0;
-    min-width: 50%;
-}
+} */
 
-/* navbar */
-.deconnexion {
-    background-color: #f06b52;
-    color: #ffffff;
-    padding: 10px 15px;
-    text-decoration: none;
-    border-radius: 5px;
-    display: inline-block;
-    transition: background-color 0.3s ease;
-}
-
-.navbar .deconnexion:hover {
-    background-color: #d83616;
-    color: #ffffff;
+body {
+    font-family: Arial, sans-serif;
+    background-color: #fffce7;
+    margin: 0;
+    padding: 0;
+    height: 100vh;  /* Assurez-vous que le body occupe toute la hauteur de la fenêtre */
+    display: flex;  /* Appliquez un modèle Flexbox pour que les enfants soient centrés */
+    justify-content: center;  /* Centre le contenu horizontalement */
+    align-items: center;  /* Centre le contenu verticalement */
 }
 
 .navbar {
@@ -66,15 +60,34 @@ body {
     margin : 0;
 }
 
-.container {
-    width: 50%;
+.deconnexion {
+    background-color: #f06b52;
+    color: #ffffff;
+    padding: 10px 15px;
+    text-decoration: none;
+    border-radius: 5px;
+    display: inline-block;
+    transition: background-color 0.3s ease;
+}
+
+.deconnexion:hover {
+    background-color: #d83616;
+    color: #ffffff;
+}
+
+.navbar .deconnexion:hover {
+    background-color: #d83616;
+    color: #ffffff;
+}
+
+/* .container {
+    width: 100%;
     max-width: 600px;
     margin: 20px auto;
     text-align: center;
     padding: 10px;
     margin-top: 40px;
-}
-
+} */
 
 h2 {
     color: #f06b52;
@@ -115,13 +128,92 @@ a:hover {
     background-color: #252847;
 }
 
-.informations {
+/* .container {
+    width: 50%;
+    max-width: 1500px;
+    margin: 20px auto;
+    text-align: center;
+    padding: 10px;
+    margin-top: 40px;
+    min-width: 1000px;
+
+} */
+
+/* .container {
+    max-width: 1500px;
+    width: 100%;
+    margin: 20px auto;
+    text-align: center;
+    padding: 10px;
+    margin-top: 40px;
+} */
+
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+/* .informations {
     background-color: #ffffff;
     padding: 20px;
     border-radius: 20px;
     margin-bottom: 20px;
     margin-top: 20px !important;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+} */
+
+/* .informations {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+    margin-top: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 300px;
+    height: auto;
+} */
+
+/* .informations {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+    margin-top: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 300px;
+    height: auto;
+} */
+
+/* @media screen and (max-width: 768px) {
+    .container {
+        padding: 5px;
+    }
+
+    .informations {
+        padding: 15px;
+        margin-top: 10px;
+        margin-bottom: 10px;
+    }
+} */
+
+.informations {
+    width: 80%;
+    overflow-x: auto;
 }
 
 .informations h3 {
@@ -158,6 +250,11 @@ input[type="submit"]:active {
     align-items: center;
 }
 
+/* .centre {
+    text-align: center;
+    margin: 20px 0;
+} */
+
 .centre a {
     margin-left: 5px;
     text-decoration: none;
@@ -187,7 +284,7 @@ input[type="submit"]:hover {
     color: #ffffff;
 }
 
-input[type="text"], input[type="password"], input[type="date"], input[type="tel"], input[type="email"], select {
+/* input[type="text"], input[type="password"], input[type="date"], input[type="tel"], input[type="email"], select, input[type="number"] {
     width: 80%;
     padding: 10px;
     margin-bottom: 15px;
@@ -199,14 +296,55 @@ input[type="text"], input[type="password"], input[type="date"], input[type="tel"
     transition: border-color 0.3s ease;
 }
 
-input[type="text"]:hover, input[type="password"]:hover, input[type="date"]:hover, input[type="tel"]:hover, input[type="email"]:hover {
+input[type="text"]:hover, input[type="password"]:hover, input[type="date"]:hover, input[type="tel"]:hover, input[type="email"]:hover, input[type="number"]:hover {
     border-color: #7eb8c4;
 }
 
-input[type="text"]:focus, input[type="password"]:focus, input[type="date"]:focus, input[type="tel"]:focus, input[type="email"]:focus {
+input[type="text"]:focus, input[type="password"]:focus, input[type="date"]:focus, input[type="tel"]:focus, input[type="email"]:focus, input[type="number"]:focus {
+    border-color: #f06b52;
+    outline: none;
+} */
+
+input[type="text"], 
+input[type="password"], 
+input[type="date"], 
+input[type="tel"], 
+input[type="email"], 
+input[type="number"], 
+input[type="time"], 
+select {
+    width: 80%;
+    padding: 10px;
+    margin-bottom: 15px;
+    font-size: 1rem;
+    border: 1px solid #c7cfd3;
+    border-radius: 10px;
+    box-sizing: border-box;
+    background-color: #f9f9f9;
+    transition: border-color 0.3s ease;
+}
+
+input[type="text"]:hover, 
+input[type="password"]:hover, 
+input[type="date"]:hover, 
+input[type="tel"]:hover, 
+input[type="email"]:hover, 
+input[type="number"]:hover, 
+input[type="time"]:hover {
+    border-color: #7eb8c4;
+}
+
+input[type="text"]:focus, 
+input[type="password"]:focus, 
+input[type="date"]:focus, 
+input[type="tel"]:focus, 
+input[type="email"]:focus, 
+input[type="number"]:focus, 
+input[type="time"]:focus {
     border-color: #f06b52;
     outline: none;
 }
+
 
 .commentaire input {
     margin-bottom: 5px;
@@ -226,7 +364,7 @@ input[type="text"]:focus, input[type="password"]:focus, input[type="date"]:focus
 }
 
 
-.table-container {
+/* .table-container {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -237,6 +375,7 @@ table {
     border-collapse: collapse;
     width: 80%;
     text-align: center;
+    margin: auto;
 }
 
 table th, table td {
@@ -249,4 +388,32 @@ table th, table td {
 table th {
     background-color: #f4f4f4;
     font-weight: bold;
+} */
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 10px;
+    text-align: left;
+    border: 1px solid #ddd;
+}
+
+
+
+/* .action-button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 5px;
+    margin: 5px;
+}
+
+.action-button:hover {
+    background-color: #0056b3;
 }
