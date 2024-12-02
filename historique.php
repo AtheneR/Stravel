@@ -17,54 +17,55 @@
     $message = "";
 
     $train_details = null;
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_train'])) {
-    $id_train = $_POST['id_train'];
-    $sql_details = "
-        SELECT 
-            r.heure_achat, 
-            r.nom_voyageur, 
-            r.prenom_voyageur, 
-            r.numero_billet, 
-            t.jour_trajet, 
-            t.heure_depart, 
-            t.heure_arrivee, 
-            t.type, 
-            g1.nom AS gare_depart, 
-            g2.nom AS gare_arrivee
-        FROM reservation r
-        LEFT JOIN train t ON t.id_train = r.id_train
-        LEFT JOIN gare g1 ON t.id_gare_depart = g1.id_gare
-        LEFT JOIN gare g2 ON t.id_gare_arrivee = g2.id_gare
-        WHERE r.id_utilisateur = :user_id AND r.id_train = :id_train
-    ";
-    $stmt_details = $bdd->prepare($sql_details);
-    $stmt_details->execute([
-        'user_id' => $user_id,
-        'id_train' => $id_train
-    ]);
-    $train_details = $stmt_details->fetch();
-} else {
-    $sql = "
-        SELECT 
-            r.id_train, 
-            t.jour_trajet, 
-            g1.nom AS gare_depart, 
-            g2.nom AS gare_arrivee
-        FROM reservation r
-        LEFT JOIN train t ON t.id_train = r.id_train
-        LEFT JOIN gare g1 ON t.id_gare_depart = g1.id_gare
-        LEFT JOIN gare g2 ON t.id_gare_arrivee = g2.id_gare
-        WHERE r.id_utilisateur = :user_id
-        AND t.jour_trajet < CURRENT_DATE()
-        ORDER BY t.jour_trajet ASC
-    ";
-    $stmt = $bdd->prepare($sql);
-    $stmt->execute(['user_id' => $user_id]);
-    $trains = $stmt->fetchAll();
-    if (empty($trains)) {
-        $message = "Vous n'avez pas effectué de réservation pour l'instant.";
+
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_train'])) {
+        $id_train = $_POST['id_train'];
+        $sql_details = "
+            SELECT 
+                r.heure_achat, 
+                r.nom_voyageur, 
+                r.prenom_voyageur, 
+                r.numero_billet, 
+                t.jour_trajet, 
+                t.heure_depart, 
+                t.heure_arrivee, 
+                t.type, 
+                g1.nom AS gare_depart, 
+                g2.nom AS gare_arrivee
+            FROM reservation r
+            LEFT JOIN train t ON t.id_train = r.id_train
+            LEFT JOIN gare g1 ON t.id_gare_depart = g1.id_gare
+            LEFT JOIN gare g2 ON t.id_gare_arrivee = g2.id_gare
+            WHERE r.id_utilisateur = :user_id AND r.id_train = :id_train
+        ";
+        $stmt_details = $bdd->prepare($sql_details);
+        $stmt_details->execute([
+            'user_id' => $user_id,
+            'id_train' => $id_train
+        ]);
+        $train_details = $stmt_details->fetch();
+    } else {
+        $sql = "
+            SELECT 
+                r.id_train, 
+                t.jour_trajet, 
+                g1.nom AS gare_depart, 
+                g2.nom AS gare_arrivee
+            FROM reservation r
+            LEFT JOIN train t ON t.id_train = r.id_train
+            LEFT JOIN gare g1 ON t.id_gare_depart = g1.id_gare
+            LEFT JOIN gare g2 ON t.id_gare_arrivee = g2.id_gare
+            WHERE r.id_utilisateur = :user_id
+            AND t.jour_trajet < CURRENT_DATE()
+            ORDER BY t.jour_trajet ASC
+        ";
+        $stmt = $bdd->prepare($sql);
+        $stmt->execute(['user_id' => $user_id]);
+        $trains = $stmt->fetchAll();
+        if (empty($trains)) {
+            $message = "Vous n'avez pas effectué de réservation pour l'instant.";
+        }
     }
-}
 ?>
 
 <head>
@@ -79,9 +80,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_train'])) {
     <a href="accueil_utilisateur.php"><img src="logo_couleur.png" alt="Logo Starvel" class="logo" /></a>
     <a href="reservation.php">Réserver un trajet</a>
     <a href="modification_utilisateur.php">Modifier mon profil</a>
-    <a href="annulation.php">Annuler un trajet</a>
+    <a href="annulation.php">Mes trajets à venir</a>
     <a href="historique.php">Historique de mes trajets</a>
-    <a href="connexion.php?action=logout" class="deconnexion">Se déconnecter</a>
+    <a href="connexion.php?action=logout" class="deconnexion">Déconnexion</a>
 </nav>
 
 <div class="container">
