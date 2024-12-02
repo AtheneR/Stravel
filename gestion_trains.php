@@ -30,7 +30,6 @@
 
     // var_dump($_POST);
     if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['gare_depart'])) {
-        // print_r('entree');
         $gare_depart = $_POST['gare_depart'];
         $gare_arrivee = $_POST['gare_arrivee'];
         $jour_trajet = $_POST['jour_trajet'];
@@ -40,27 +39,32 @@
         $nb_places = $_POST['nb_places'];
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['valider'])) {    
-            $sql = "INSERT INTO train (nb_places, id_gare_depart, id_gare_arrivee, heure_depart, heure_arrivee, jour_trajet, type) 
-                    VALUES (:nb_places, :gare_depart, :gare_arrivee, :horaire_depart, :horaire_arrivee, :jour_trajet, :type)";
-            $bdd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            try {
-                $stmt = $bdd->prepare($sql);
-                // echo "Requête exécutée : " . $sql . "\n";
+            if ($gare_depart === $gare_arrivee) {
+                $message = "La gare de départ et la gare d'arrivée doivent être différentes.";
+            } elseif ($horaire_depart >= $horaire_arrivee) {
+                $message = "L'heure d'arrivée doit être après l'heure de départ.";
+            } 
+            else {
+                $sql = "INSERT INTO train (nb_places, id_gare_depart, id_gare_arrivee, heure_depart, heure_arrivee, jour_trajet, type) 
+                        VALUES (:nb_places, :gare_depart, :gare_arrivee, :horaire_depart, :horaire_arrivee, :jour_trajet, :type)";
+                $bdd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                try {
+                    $stmt = $bdd->prepare($sql);
+                    $stmt->execute([
+                        ':nb_places' => $nb_places,
+                        ':gare_depart' => $gare_depart,
+                        ':gare_arrivee' => $gare_arrivee,
+                        ':horaire_depart' => $horaire_depart,
+                        ':horaire_arrivee' => $horaire_arrivee,
+                        ':jour_trajet' => $jour_trajet,
+                        ':type' => $type,
+                    ]);
 
-                $stmt->execute([
-                    ':nb_places' => $nb_places,
-                    ':gare_depart' => $gare_depart,
-                    ':gare_arrivee' => $gare_arrivee,
-                    ':horaire_depart' => $horaire_depart,
-                    ':horaire_arrivee' => $horaire_arrivee,
-                    ':jour_trajet' => $jour_trajet,
-                    ':type' => $type,
-                ]);
-
-                header("Location: gestion_trains.php?reussite_ajout=1");
-                exit();
-            } catch (PDOException $e) {
-                $message = "Erreur lors de l'ajout du train : " . $e->getMessage();
+                    header("Location: gestion_trains.php?reussite_ajout=1");
+                    exit();
+                } catch (PDOException $e) {
+                    $message = "Erreur lors de l'ajout du train : " . $e->getMessage();
+                }
             }
         } else {
             $message = "Veuillez remplir tous les champs du formulaire.";
@@ -69,22 +73,34 @@
 
     if (isset($_POST['suppression']) && !empty($_POST['id_train'])) {
         $id_train = $_POST['id_train'];
-        // var_dump($id_train);
-        $sql = "DELETE FROM train WHERE id_train = :id_train";
+    
         try {
             $bdd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            $stmt = $bdd->prepare($sql);
-            $stmt->execute([
-                ':id_train' => $id_train,
-            ]);
+    
+            $checkSql = "SELECT COUNT(*) FROM reservation WHERE id_train = :id_train";
+            $checkStmt = $bdd->prepare($checkSql);
+            $checkStmt->execute([':id_train' => $id_train]);
+            $count = $checkStmt->fetchColumn();
+    
+            if ($count > 0) {
+                $deleteReservationsSql = "DELETE FROM reservation WHERE id_train = :id_train";
+                $deleteReservationsStmt = $bdd->prepare($deleteReservationsSql);
+                $deleteReservationsStmt->execute([':id_train' => $id_train]);
+    
+                $message = "Les réservations faites pour ce train ont également été supprimées.";
+            }
 
+            $deleteTrainSql = "DELETE FROM train WHERE id_train = :id_train";
+            $deleteTrainStmt = $bdd->prepare($deleteTrainSql);
+            $deleteTrainStmt->execute([':id_train' => $id_train]);
+    
             header("Location: gestion_trains.php?reussite_suppr=1");
             exit();
         } catch (PDOException $e) {
             $message = "Erreur lors de la suppression du train : " . $e->getMessage();
         }
     }
-
+    
     if ($afficher_formulaire_suppr){
         $sql = "
             SELECT 
@@ -105,7 +121,6 @@
         if (empty($trains)) {
             $message = "Il n'y a aucun train à venir.";
         }
-        
     }
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_train']) && isset($_POST['suppr']) ) {
         // var_dump($_POST['id_train']);
@@ -149,9 +164,6 @@
             ORDER BY t.jour_trajet ASC
         ";
         $stmt = $bdd->prepare($sql);
-        // print_r("\n");
-        // var_dump($stmt);
-        // print_r("\n");
         $stmt->execute();
         $trains = $stmt->fetchAll();
         if (empty($trains)) {
@@ -181,9 +193,6 @@
         ]);
     
         $train_details_modif = $stmt_details->fetch();
-        // print_r("\n");
-        // var_dump($train_details_modif);
-        // var_dump($id_train);
     }
     
     if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['modification']) && isset($_POST['id_train'])) {
@@ -196,7 +205,7 @@
         $type = !empty($_POST["type"]) ? $_POST["type"] : $train_details_modif['type'];
         $nb_places = !empty($_POST["nb_places"]) ? $_POST["nb_places"] : $train_details_modif['nb_places'];
         $id_train = $_POST['id_train'];
-    
+        
         $sql = "UPDATE train 
                 SET id_gare_depart = :gare_depart, 
                     id_gare_arrivee = :gare_arrivee, 
@@ -206,25 +215,30 @@
                     type = :type, 
                     nb_places = :nb_places 
                 WHERE id_train = :id_train";
-    
-        try {
-            $bdd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            $requeteMiseAJour = $bdd->prepare($sql);
-            $requeteMiseAJour->execute([
-                'gare_depart' => $gare_depart,
-                'gare_arrivee' => $gare_arrivee,
-                'jour_trajet' => $jour_trajet,
-                'horaire_depart' => $horaire_depart,
-                'horaire_arrivee' => $horaire_arrivee,
-                'type' => $type,
-                'nb_places' => $nb_places,
-                'id_train' => $id_train,
-            ]);
-            // var_dump($requeteMiseAJour);
-            header("Location: gestion_trains.php?reussite_modif=1");
-            exit();
-        } catch (PDOException $e) {
-            $message = "Erreur lors de la mise à jour du train : " . $e->getMessage();
+        if ($gare_depart === $gare_arrivee) {
+            $message = "La gare de départ et la gare d'arrivée doivent être différentes.";
+        } elseif ($horaire_depart >= $horaire_arrivee) {
+            $message = "L'heure d'arrivée doit être après l'heure de départ.";
+        } else {
+            try {
+                $bdd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                $requeteMiseAJour = $bdd->prepare($sql);
+                $requeteMiseAJour->execute([
+                    'gare_depart' => $gare_depart,
+                    'gare_arrivee' => $gare_arrivee,
+                    'jour_trajet' => $jour_trajet,
+                    'horaire_depart' => $horaire_depart,
+                    'horaire_arrivee' => $horaire_arrivee,
+                    'type' => $type,
+                    'nb_places' => $nb_places,
+                    'id_train' => $id_train,
+                ]);
+                // var_dump($requeteMiseAJour);
+                header("Location: gestion_trains.php?reussite_modif=1");
+                exit();
+            } catch (PDOException $e) {
+                $message = "Erreur lors de la mise à jour du train : " . $e->getMessage();
+            }
         }
     }
 ?>
@@ -237,18 +251,21 @@
     <link rel="icon" type="image/png" href="logo_couleur.png">
 </head>
 
-<!-- <nav class="navbar">
+<nav class="navbar">
     <a href="accueil_administrateur.php"><img src="logo_couleur.png" alt="Logo Starvel" class="logo" /></a>
     <a href="gestion_trains.php">Gestion des trains</a>
     <a href="gestion_gares.php">Gestion des gares</a>
     <a href="gestion_administrateur.php">Gestion des administrateurs</a>
     <a href="gestion_adresses.php">Gestion des adresses</a>
     <a href="connexion.php?action=logout" class="deconnexion">Déconnexion</a>
-</nav> -->
+</nav>
 
 <div class="container">
     <div class="informations">
         <h2>Gestion des trains</h2>
+        <?php if ($message): ?>
+            <p class="centre"><?= htmlspecialchars($message) ?></p>
+        <?php endif; ?>
         <?php if (isset($_GET['reussite_ajout']) && $_GET['reussite_ajout'] == 1): ?>
             <h3>Le train a bien été ajouté.</h3>
             <a href="gestion_trains.php" class="action-button">Retour</a>
@@ -257,6 +274,9 @@
             <a href="gestion_trains.php" class="action-button">Retour</a>
         <?php elseif (isset($_GET['reussite_suppr']) && $_GET['reussite_suppr'] == 1): ?>
             <h3>Le train a bien été supprimé.</h3>
+            <?php if ($message): ?>
+                <p class="centre"><?= htmlspecialchars($message) ?></p>
+            <?php endif; ?>
             <a href="gestion_trains.php" class="action-button">Retour</a>
         <?php elseif (!$afficher_formulaire_ajout && !$afficher_formulaire_modif && !$afficher_formulaire_suppr && !$train_details_suppr && !$train_details_modif && !isset($_POST['modification'])): ?>
             <div class="actions">
@@ -328,7 +348,7 @@
                 </div>
 
             </form>
-        <?php elseif($afficher_formulaire_suppr): ?>
+        <?php elseif($afficher_formulaire_suppr && $trains): ?>
             <table>
                 <thead>
                     <tr>
@@ -370,7 +390,7 @@
                 <button type="submit" name="suppression" class="deconnexion">Supprimer le train</button>
             </form>
             <a href="gestion_trains.php">Retour</a>
-        <?php elseif($afficher_formulaire_modif): ?>
+        <?php elseif($afficher_formulaire_modif && $trains): ?>
             <table>
                 <thead>
                     <tr>
@@ -469,9 +489,6 @@
                 <a href="gestion_trains.php" class="action-button">Retour</a>
             </form>
 
-        <?php endif; ?>
-        <?php if ($message): ?>
-            <p class="centre"><?= htmlspecialchars($message) ?></p>
         <?php endif; ?>
     </div>
 </div>
