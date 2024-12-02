@@ -40,13 +40,12 @@
 
     // var_dump($_POST);
     if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['valider'])) {
-        // print_r('\n nentree \n');
         $numero = $_POST['numero'];
         $rue = $_POST['rue'];
         $ville = $_POST['ville'];
-        
+
         if($_POST['code_postal']>99999){
-            $message = "Veuillez vérifier votre code postal."
+            $message = "Veuillez vérifier votre code postal.";
         } else {
             $code_postal = $_POST['code_postal'];
 
@@ -61,7 +60,6 @@
                     ':code_postal' => $code_postal
                 ]);
                 // var_dump($stmt);
-
                 header("Location: gestion_adresses.php?reussite_ajout=1");
                 exit();
             } catch (PDOException $e) {
@@ -72,22 +70,30 @@
 
     if (isset($_POST['suppression']) && !empty($_POST['id_adresse'])) {
         $id_adresse = $_POST['id_adresse'];
-        // var_dump($id_gare);
-        $sql = "DELETE FROM adresse WHERE id_adresse = :id_adresse";
+    
         try {
             $bdd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            $stmt = $bdd->prepare($sql);
-            $stmt->execute([
-                ':id_adresse' => $id_adresse,
-            ]);
-
-            header("Location: gestion_adresses.php?reussite_suppr=1");
-            exit();
+    
+            $checkSql = "SELECT COUNT(*) FROM gare WHERE id_adresse = :id_adresse";
+            $checkStmt = $bdd->prepare($checkSql);
+            $checkStmt->execute([':id_adresse' => $id_adresse]);
+            $count = $checkStmt->fetchColumn();
+    
+            if ($count > 0) {
+                $message = "Veuillez supprimer la gare associée à cette adresse avant de supprimer l'adresse.";
+            } else {
+                $sql = "DELETE FROM adresse WHERE id_adresse = :id_adresse";
+                $stmt = $bdd->prepare($sql);
+                $stmt->execute([':id_adresse' => $id_adresse]);
+    
+                header("Location: gestion_adresses.php?reussite_suppr=1");
+                exit();
+            }
         } catch (PDOException $e) {
             $message = "Erreur lors de la suppression de l'adresse : " . $e->getMessage();
         }
     }
-
+    
     if ($afficher_formulaire_suppr){
         $sql = "SELECT * FROM adresse";
         $stmt = $bdd->prepare($sql);
@@ -109,7 +115,7 @@
             'id_adresse' => $id_adresse
         ]);
         $adresse_details_suppr = $stmt_details->fetch();
-        var_dump($adresse_details_suppr);
+        // var_dump($adresse_details_suppr);
     }
 
     if ($afficher_formulaire_modif){
@@ -138,19 +144,15 @@
             'id_adresse' => $id_adresse
         ]);
         $adresse_details_modif = $stmt_details->fetch();
-        
-        // var_dump($adresse_details_modif);
-        // var_dump($id_train);
     }
     
     if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['modification']) && isset($_POST['id_adresse'])) {
-        // print_r("passage\n");
         $numero = !empty($_POST["numero"]) ? $_POST["numero"] : $adresse_details_modif['numero'];
         $rue = !empty($_POST["rue"]) ? $_POST["rue"] : $adresse_details_modif['rue'];
         $ville = !empty($_POST["ville"]) ? $_POST["ville"] : $adresse_details_modif['ville'];
         $code_postal = !empty($_POST["code_postal"]) ? $_POST["code_postal"] : $adresse_details_modif['code_postal'];
         $id_adresse = $_POST['id_adresse'];
-        var_dump($code_postal);
+        // var_dump($code_postal);
         $sql = "UPDATE adresse 
                 SET numero = :numero, 
                     rue = :rue, 
@@ -295,7 +297,7 @@
                             <td><?= htmlspecialchars($adresse['ville']); ?></td>
                             <td>
                                 <form method="post" action="gestion_adresses.php">
-                                    <input type="hidden" name="id_adresse" value="<?= htmlspecialchars($adresse['id_adresse']); //var_dump($train['id_train']); ?>">
+                                    <input type="hidden" name="id_adresse" value="<?= htmlspecialchars($adresse['id_adresse']); //var_dump($train['id_adresse']); ?>">
                                     <button type="submit" name="modifier">Détails de l'adresse</button>
                                 </form>
                             </td>
