@@ -40,7 +40,6 @@
 
     // var_dump($_POST);
     if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['valider'])) {
-        // print_r('\n nentree \n');
         $nb_quai = $_POST['nb_quai'];
         $nom = $_POST['nom'];
         $capacite_accueil = $_POST['capacite_accueil'];
@@ -69,7 +68,6 @@
                 ':id_adresse' => $id_adresse,
             ]);
             // var_dump($stmt);
-
             header("Location: gestion_gares.php?reussite_ajout=1");
             exit();
         } catch (PDOException $e) {
@@ -79,22 +77,30 @@
 
     if (isset($_POST['suppression']) && !empty($_POST['id_gare'])) {
         $id_gare = $_POST['id_gare'];
-        // var_dump($id_gare);
-        $sql = "DELETE FROM gare WHERE id_gare = :id_gare";
+    
         try {
             $bdd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            $stmt = $bdd->prepare($sql);
-            $stmt->execute([
-                ':id_gare' => $id_gare,
-            ]);
-
-            header("Location: gestion_gares.php?reussite_suppr=1");
-            exit();
+    
+            $checkSql = "SELECT COUNT(*) FROM train WHERE id_gare_depart = :id_gare OR id_gare_arrivee = :id_gare";
+            $checkStmt = $bdd->prepare($checkSql);
+            $checkStmt->execute([':id_gare' => $id_gare]);
+            $count = $checkStmt->fetchColumn();
+    
+            if ($count > 0) {
+                $message = "Veuillez supprimer les trains associés à cette gare avant de supprimer la gare.";
+            } else {
+                $sql = "DELETE FROM gare WHERE id_gare = :id_gare";
+                $stmt = $bdd->prepare($sql);
+                $stmt->execute([':id_gare' => $id_gare]);
+    
+                header("Location: gestion_gares.php?reussite_suppr=1");
+                exit();
+            }
         } catch (PDOException $e) {
             $message = "Erreur lors de la suppression de la gare : " . $e->getMessage();
         }
     }
-
+    
     if ($afficher_formulaire_suppr){
         $sql = "SELECT gare.*, adresse.ville, adresse.code_postal, adresse.numero, adresse.rue
             FROM gare
@@ -111,7 +117,7 @@
     }
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_gare']) && isset($_POST['suppr']) ) {
-        // var_dump($_POST['id_train']);
+        // var_dump($_POST['id_gare']);
         $id_gare = $_POST['id_gare'];
         $sql_details = "SELECT gare.*, adresse.ville, adresse.code_postal, adresse.numero, adresse.rue
             FROM gare
@@ -129,7 +135,6 @@
     }
 
     if ($afficher_formulaire_modif){
-
         $sql = "SELECT gare.*, adresse.ville, adresse.code_postal, adresse.numero, adresse.rue
             FROM gare
             LEFT JOIN adresse ON gare.id_adresse = adresse.id_adresse
@@ -161,9 +166,8 @@
         ]);
     
         $gare_details_modif = $stmt_details->fetch();
-
         // var_dump($gare_details_modif);
-        // var_dump($id_train);
+        // var_dump($id_gare);
     }
     
     if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['modification']) && isset($_POST['id_gare'])) {
@@ -219,7 +223,7 @@
 
 <nav class="navbar">
     <a href="accueil_administrateur.php"><img src="logo_couleur.png" alt="Logo Starvel" class="logo" /></a>
-    <a href="gestion_trains.php">Gestion des gares</a>
+    <a href="gestion_trains.php">Gestion des trains</a>
     <a href="gestion_gares.php">Gestion des gares</a>
     <a href="gestion_administrateur.php">Gestion des administrateurs</a>
     <a href="gestion_adresses.php">Gestion des adresses</a>
@@ -229,6 +233,9 @@
 <div class="container">
     <div class="informations">
         <h2>Gestion des gares</h2>
+        <?php if ($message): ?>
+            <p class="centre"><?= htmlspecialchars($message) ?></p>
+        <?php endif; ?>
         <?php if (isset($_GET['reussite_ajout']) && $_GET['reussite_ajout'] == 1): ?>
             <h3>La gare a bien été ajoutée.</h3>
             <a href="gestion_gares.php" class="action-button">Retour</a>
@@ -313,7 +320,7 @@
                             <td><?= htmlspecialchars($gare['ville']); ?></td>
                             <td>
                                 <form method="post" action="gestion_gares.php">
-                                    <input type="hidden" name="id_gare" value="<?= htmlspecialchars($gare['id_gare']); //var_dump($train['id_train']); ?>">
+                                    <input type="hidden" name="id_gare" value="<?= htmlspecialchars($gare['id_gare']); //var_dump($train['id_gare']); ?>">
                                     <button type="submit" name="suppr">Détails de la gare</button>
                                 </form>
                             </td>
@@ -353,7 +360,7 @@
                             <td><?= htmlspecialchars($gare['ville']); ?></td>
                             <td>
                                 <form method="post" action="gestion_gares.php">
-                                    <input type="hidden" name="id_gare" value="<?= htmlspecialchars($gare['id_gare']); //var_dump($train['id_train']); ?>">
+                                    <input type="hidden" name="id_gare" value="<?= htmlspecialchars($gare['id_gare']); //var_dump($gare['id_gare']); ?>">
                                     <button type="submit" name="modifier">Détails de la gare</button>
                                 </form>
                             </td>
@@ -420,9 +427,6 @@
                 <a href="gestion_gares.php" class="action-button">Retour</a>
             </form>
 
-        <?php endif; ?>
-        <?php if ($message): ?>
-            <p class="centre"><?= htmlspecialchars($message) ?></p>
         <?php endif; ?>
     </div>
 </div>
