@@ -33,13 +33,12 @@
 </nav>
 
 <div class="container">
-        <div class="informations">
-        <form method="POST" action="inscription_utilisateur.php">
+    <div class="informations">
+        <form method="POST" action="modification_utilisateur.php">
         <h2>Modification</h2>
-
         <div>
             <div>  
-            <label for="nom">Nom : <!--<p class='rouge'>*</p>--></label><br>
+            <label for="nom">Nom :</label><br>
             <input type="text" id="nom" name="nom" placeholder=<?= htmlspecialchars($user['nom']) ?> >
             </div>
             <div>  
@@ -58,11 +57,11 @@
             <input type="tel" id="telephone" name="telephone" pattern="[0-9]{10}" placeholder=<?= htmlspecialchars($user['telephone']) ?> >
             </div>
             <div>  
-            <label for="email">Adresse mail :</label>
+            <label for="email">Adresse mail :</label><br>
             <input type="email" id="email" name="email" placeholder=<?= htmlspecialchars($user['email']) ?> >
             </div>
             <div class="commentaire">
-                <label for="mot_de_passe">Mot de passe : </label>
+                <label for="mot_de_passe">Mot de passe : </label><br>
                 <input type="password" id="mot_de_passe" name="mot_de_passe" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{5,}" ><br>
                 <p>Le mot de passe doit contenir au moins 1 chiffre, 1 lettre majuscule, 1 lettre minuscule, et doit avoir au moins 8 caractères en tout.</p>
             </div>
@@ -75,10 +74,9 @@
                 <label for="pref_tel">téléphone</label>
             </div>
         </div>
-
         <br>
-        <div class="seconnecter">
-            <input type="submit" value="Enregistrer les modifications">
+        <div>
+            <button type="submit" name="valider" class="action-button">Enregistrer les modifications</button>
         </div>
         </form>
     </div>
@@ -88,68 +86,47 @@
     $message = '';
 
     if ($_SERVER["REQUEST_METHOD"] == "POST") {
-        if (!empty($_POST["nom"])) {
-            $nom = $_POST["nom"];
-        } else {
-            $nom = $user['nom'];
-        }
-        
-        if (!empty($_POST["prenom"])) {
-            $prenom = $_POST["prenom"];
-        } else {
-            $prenom = $user['prenom'];
-        }
-        
-        if (!empty($_POST["date_naissance"])) {
-            $date_naissance = $_POST["date_naissance"];
-        } else {
-            $date_naissance = $user['date_naissance'];
-        }
-        
-        if (!empty($_POST["telephone"])) {
-            $telephone = $_POST["telephone"];
-        } else {
-            $telephone = $user['telephone'];
-        }
-        
-        if (!empty($_POST["email"])) {
-            $email = $_POST["email"];
-        } else {
-            $email = $user['email'];
-        }
-        
-        if (!empty($_POST["mot_de_passe"])) {
-            $mot_de_passe = password_hash($_POST['mot_de_passe'], PASSWORD_DEFAULT);
-        } else {
-            $mot_de_passe = $user['mot_de_passe'];
-        }
-        
-        if (!empty($_POST["preference_communication"])) {
-            $preference_communication = $_POST["preference_communication"];
-        } else {
-            $preference_communication = $user['preference_communication'];
-        }
+        $nom = !empty($_POST["nom"]) ? $_POST["nom"] : $user['nom'];
+        $prenom = !empty($_POST["prenom"]) ? $_POST["prenom"] : $user['prenom'];
+        $date_naissance = !empty($_POST["date_naissance"]) ? $_POST["date_naissance"] : $user['date_naissance'];
+        $telephone = !empty($_POST["telephone"]) ? $_POST["telephone"] : $user['telephone'];
+        $email = !empty($_POST["email"]) ? $_POST["email"] : $user['email'];
+        $mot_de_passe = !empty($_POST["mot_de_passe"]) ? password_hash($_POST['mot_de_passe'], PASSWORD_DEFAULT) : $user['mot_de_passe'];
+        $preference_communication = !empty($_POST["preference_communication"]) ? $_POST["preference_communication"] : $user['preference_communication'];
 
-       
-        $sql = "UPDATE utilisateur SET nom=:nom, prenom=:prenom,date_naissance=:date_naissance,telephone=:telephone, email=:email, mot_de_passe=:mot_de_passe,preference_communication=:preference_communication WHERE id_utilisateur=:user_id";
-        
-        $rqUpdate = $bdd->prepare($sql);
-        $rqUpdate->execute(
-            ['nom' => $nom,
-            'prenom' => $prenom,
-            'date_naissance' => $date_naissance,
-            'telephone' => $telephone,
-            'email' => $email,
-            'mot_de_passe' => $mot_de_passe,
-            'preference_communication' => $preference_communication,
-            'user_id' => $user_id]
-        );
-        if ($rqUpdate){
-            $message = 'Modification réussie';
-            header('Location: accueil_utilisateur.php');
-            exit();
+        $req_admin = "SELECT * FROM administrateur WHERE email = :email AND id_administrateur != :id_administrateur";
+        $verif_admin = $bdd->prepare($req_admin);
+        $verif_admin->execute(['email' => $email, 'id_administrateur' => $user['id_utilisateur']]);
+        $a_verif = $verif_admin->fetch();
+
+        $req_inscrit = "SELECT * FROM utilisateur WHERE email = :email AND id_utilisateur != :id_utilisateur";
+        $verif_inscrit = $bdd->prepare($req_inscrit);
+        $verif_inscrit->execute(['email' => $email, 'id_utilisateur' => $user['id_utilisateur']]);
+        $u_verif = $verif_inscrit->fetch();
+
+        if($u_verif || $a_verif){
+            $message = 'Il y a déjà un compte lié à cet email.';
         } else {
-            $message = 'Erreur lors de la modification';
+            $sql = "UPDATE utilisateur SET nom=:nom, prenom=:prenom,date_naissance=:date_naissance,telephone=:telephone, email=:email, mot_de_passe=:mot_de_passe,preference_communication=:preference_communication WHERE id_utilisateur=:user_id";
+            
+            $rqUpdate = $bdd->prepare($sql);
+            $rqUpdate->execute(
+                ['nom' => $nom,
+                'prenom' => $prenom,
+                'date_naissance' => $date_naissance,
+                'telephone' => $telephone,
+                'email' => $email,
+                'mot_de_passe' => $mot_de_passe,
+                'preference_communication' => $preference_communication,
+                'user_id' => $user_id]
+            );
+            if ($rqUpdate){
+                $message = 'Modification réussie';
+                header('Location: accueil_utilisateur.php');
+                exit();
+            } else {
+                $message = 'Erreur lors de la modification';
+            }
         }
     }
 ?>
