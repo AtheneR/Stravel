@@ -19,6 +19,11 @@
     $requete_gares->execute();
     $gares = $requete_gares->fetchAll();
 
+    $connexionreservations = "SELECT * FROM reservation";
+    $requete_reservations = $bdd->prepare($connexionreservations);
+    $requete_reservations->execute();
+    $reservations = $requete_reservations->fetchAll();
+
     $trains = null;
     $message = "";
     $reussite = null;
@@ -85,7 +90,7 @@
     <a href="modification_utilisateur.php">Modifier mon profil</a>
     <a href="annulation.php">Mes trajets à venir</a>
     <a href="historique.php">Historique de mes trajets</a>
-    <a href="connexion.php?action=logout" class="deconnexion">Se déconnecter</a>
+    <a href="connexion.php?action=logout" class="deconnexion">Déconnexion</a>
 </nav>
 
 <div class="container">
@@ -144,7 +149,6 @@
                                 <tr>
                                     <td><?= htmlspecialchars($train['heure_depart']); ?></td>
                                     <td><?= htmlspecialchars($train['heure_arrivee']); ?></td>
-                                    <!-- <td>s</td> -->
                                     <td><?= htmlspecialchars($train['type']); ?></td>
                                     <td>
                                         <form method="post" action="reservation.php">
@@ -152,6 +156,7 @@
                                             <button type="submit" name="reserver">Réserver</button>
                                             <input type="hidden" name="action" value="reserver_train">
                                             <input type="hidden" value="<?= $_POST['jour_trajet'] ?>" name="jour_trajet">
+                                    
                                         </form>
                                     </td>
                                 </tr>
@@ -169,9 +174,8 @@
                         <label for="prenom_voyageur">Prénom :</label><br>
                         <input type="text" name="prenom_voyageur" required><br>
 
-                        <label for="date_naissance_voyageur">Date de naissance :</label>
+                        <label for="date_naissance_voyageur">Date de naissance :</label><br>
                         <input type="date" name="date_naissance_voyageur" required><br>
-                        <!-- ajouter vérification date naissance avant aujourd'hui -->
 
                         <input type="hidden" value="<?= $_POST['id_train'] ?>" name="id_train">
                         <input type="hidden" value="<?= $_POST['jour_trajet']?>" name="jour_trajet">
@@ -197,13 +201,18 @@
         // print_r($id_train);
 
         $id_utilisateur = $_SESSION['user_id'];
-        //attention, à rendre unique
-        $numero_billet = mt_rand(100000000000, 999999999999);
+        do {
+            $numero_billet = mt_rand(100000000000, 999999999999);
+            
+            $requete = "SELECT COUNT(*) FROM reservation WHERE numero_billet = :numero_billet";
+            $stmt = $bdd->prepare($requete);
+            $stmt->execute(['numero_billet' => $numero_billet]);
+            $existe = $stmt->fetchColumn();
+        } while ($existe > 0);
 
         $sql = "INSERT INTO reservation (id_utilisateur, id_train, heure_achat, nom_voyageur, prenom_voyageur, date_naissance_voyageur, numero_billet, jour_trajet)
                 VALUES (:id_utilisateur, :id_train, NOW(), :nom_voyageur, :prenom_voyageur, :date_naissance_voyageur, :numero_billet, :jour_trajet)";
 
-        //attention : gérer les duplications de valeur entrée
         $stmt = $bdd->prepare($sql);
         $stmt->execute([
             'id_utilisateur' => $id_utilisateur,
@@ -214,6 +223,7 @@
             'numero_billet' => $numero_billet,
             'jour_trajet' => $jour_trajet,
         ]);
+
         if ($stmt->rowCount() > 0) {
             header("Location: reservation.php?reussite=1");
             exit();
