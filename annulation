@@ -43,18 +43,18 @@
             'id_train' => $id_train
         ]);
         $train_details = $stmt_details->fetch();
-    } elseif($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($train_details)) {
-        $sql = "DELETE FROM reservation WHERE numero_billet=:numero_billet";
-    
+    } elseif($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['numero_billet'])) {
+        $numero_billet = $_POST['numero_billet'];
+        
+        $sql = "DELETE FROM reservation WHERE numero_billet = :numero_billet";
         $stmt = $bdd->prepare($sql);
-        $stmt->execute([
-            'numero_billet' => $train_details['numero_billet']
-        ]);
+        $stmt->execute(['numero_billet' => $numero_billet]);
+        
         if ($stmt->rowCount() > 0) {
             header("Location: annulation.php?reussite=1");
             exit();
         } else {
-            echo "Erreur lors de l'annulation.";
+            $message = "Erreur lors de l'annulation du trajet.";
         }
     } else {
         $sql = "
@@ -94,7 +94,7 @@
     <a href="modification_utilisateur.php">Modifier mon profil</a>
     <a href="annulation.php">Mes trajets à venir</a>
     <a href="historique.php">Historique de mes trajets</a>
-    <a href="connexion.php?action=logout" class="deconnexion">Se déconnecter</a>
+    <a href="connexion.php?action=logout" class="deconnexion">Déconnexion</a>
 </nav>
 
 <div class="container">
@@ -102,7 +102,7 @@
         <?php if (isset($_GET['reussite']) && $_GET['reussite'] == 1): ?>
             <h3>Votre trajet a bien été annulé.</h3>
         <?php else: ?>
-            <h2>Votre réservation</h2>
+            <h2>Vos réservations</h2>
             <?php if ($train_details): ?>
                 <h3>Détails du trajet</h3>
                 <p>Jour du trajet : <?= htmlspecialchars($train_details['jour_trajet']); ?></p>
@@ -114,7 +114,10 @@
                 <p>Nom du voyageur : <?= htmlspecialchars($train_details['nom_voyageur']); ?></p>
                 <p>Prénom du voyageur : <?= htmlspecialchars($train_details['prenom_voyageur']); ?></p>
                 <p>Heure d'achat : <?= htmlspecialchars($train_details['heure_achat']); ?></p>
-                <button type="submit" class="deconnexion" name="annulation">Annuler ce trajet</button><br>
+                <form method="post" action="annulation.php">
+                    <input type="hidden" name="numero_billet" value="<?= htmlspecialchars($train_details['numero_billet']); ?>">
+                    <button type="submit" name="annuler" class="deconnexion">Annuler ce trajet</button>
+                </form>
                 <a href="annulation.php">Retour à vos réservations</a>
             <?php elseif ($trains): ?>
                 <table>
@@ -148,9 +151,15 @@
                 <p class="centre">
                     <?= htmlspecialchars($message); ?>
                 </p>
-                <p class="centre">
-                    <a href="annulation.php">Voir une autre réservation</a>
-                </p>
+                <?php if($message == "Vous n'avez pas de réservation à venir."):?>
+                    <p class="centre">
+                        <a href="reservation.php">Effectuer une réservation</a>
+                    </p>
+                <?php else:?>
+                    <p class="centre">
+                        <a href="annulation.php">Voir une autre réservation</a>
+                    </p>
+                <?php endif; ?>
             <?php endif; ?>
         <?php endif; ?>
     </div>
