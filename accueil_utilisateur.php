@@ -1,5 +1,6 @@
 <?php
     include_once('header.php');
+
     session_start();
 
     if (!isset($_SESSION['user_id'])) {
@@ -12,6 +13,13 @@
     $requete_connexion = $bdd->prepare($connexionutilisateur);
     $requete_connexion->execute(['id' => $user_id]);
     $user = $requete_connexion->fetch();
+
+    if (isset($_GET['action']) && $_GET['action'] == 'logout') {
+        $_SESSION = [];
+        session_destroy();
+        header('Location: connexion.php');
+        exit();
+    }
 ?>
 
 <head>
@@ -28,13 +36,12 @@
     <a href="modification_utilisateur.php">Modifier mon profil</a>
     <a href="annulation.php">Mes trajets à venir</a>
     <a href="historique.php">Historique de mes trajets</a>
-    <a href="connexion.php?action=logout" class="deconnexion">Se déconnecter</a>
+    <a href="connexion.php?action=logout" class="deconnexion">Déconnexion</a>
 </nav>
 
-<div class="container" class="bas">
-    <h2>Bienvenue sur Stravel</h2>
-
+<div class="container">
     <div class="informations">
+    <h2>Bienvenue sur Stravel</h2>
         <h3>Vos informations</h3>
         <p>Nom : <?= htmlspecialchars($user['nom']) ?></p>
         <p>Prénom : <?= htmlspecialchars($user['prenom']) ?></p>
@@ -42,15 +49,5 @@
         <p>Téléphone : <?= htmlspecialchars($user['telephone']) ?></p>
         <p>E-mail : <?= htmlspecialchars($user['email']) ?></p>
         <p>Préférence de communication : <?= htmlspecialchars($user['preference_communication']) ?></p>
-        <!-- <p>Nombre de points : </p> -->
     </div>
 </div>
-
-<?php
-    if (isset($_GET['action']) && $_GET['action'] == 'logout') {
-        $_SESSION = [];
-        session_destroy();
-        header('Location: connexion.php');
-        exit();
-    }
-?>
