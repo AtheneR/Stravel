@@ -71,11 +71,11 @@
                     <input type="tel" id="telephone" name="telephone" pattern="[0-9]{10}" placeholder="0122334455" required>
                 </div>
                 <div>  
-                    <label for="email">Adresse mail :</label>
+                    <label for="email">Adresse mail :</label><br>
                     <input type="email" id="email" name="email" placeholder="nomprenom@gmail.com" required>
                 </div>
                 <div class="commentaire">
-                    <label for="mot_de_passe">Mot de passe : </label>
+                    <label for="mot_de_passe">Mot de passe : </label><br>
                     <input type="password" id="mot_de_passe" name="mot_de_passe" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{5,}" required><br>
                     <p>Le mot de passe doit contenir au moins 1 chiffre, 1 lettre majuscule, 1 lettre minuscule, et doit avoir au moins 8 caractères en tout.</p>
                 </div>
