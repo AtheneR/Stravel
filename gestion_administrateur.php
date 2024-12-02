@@ -24,7 +24,6 @@
     $afficher_formulaire_suppr = isset($_POST['supprimer_admin']);
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($afficher_formulaire_suppr)) {
-        // print_r("entree");
         if (!$est_super_admin) {
             $message = "Les administrateurs non super-administrateurs ne peuvent pas supprimer d'administrateur.";
         } else {
@@ -40,7 +39,6 @@
     }
 
     if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['valider'])) {
-        // print_r('\n nentree \n');
         $nom = $_POST['nom'];
         $prenom = $_POST['prenom'];
         $poste = $_POST['poste'];
@@ -50,22 +48,36 @@
 
         $sql = "INSERT INTO administrateur(nom, prenom, poste, email, telephone, mot_de_passe, date_creation, date_derniere_connexion) VALUES (:nom,:prenom,:poste,:email,:telephone,:mot_de_passe,CURRENT_DATE(),CURRENT_DATE())";
         $bdd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        try {
-            $stmt = $bdd->prepare($sql);
-            $stmt->execute([
-                ':nom' => $nom,
-                ':prenom' => $prenom,
-                ':poste' => $poste,
-                ':email' => $email,
-                ':telephone' => $telephone,
-                ':mot_de_passe' => $mot_de_passe
-            ]);
-            // var_dump($stmt);
 
-            header("Location: gestion_administrateur.php?reussite_ajout=1");
-            exit();
-        } catch (PDOException $e) {
-            $message = "Erreur lors de l'ajout de l'administrateur' : " . $e->getMessage();
+        $req_admin = "SELECT * FROM administrateur WHERE email = :email";
+        $verif_admin = $bdd->prepare($req_admin);
+        $verif_admin->execute(['email' => $email]);
+        $a_verif = $verif_admin->fetch();
+
+        $req_inscrit = "SELECT * FROM utilisateur WHERE email = :email";
+        $verif_inscrit = $bdd->prepare($req_inscrit);
+        $verif_inscrit->execute(['email' => $email]);
+        $u_verif = $verif_inscrit->fetch();
+
+        if($u_verif || $a_verif){
+            $message = 'Il y a déjà un compte lié à cet email.';
+        } else {
+            try {
+                $stmt = $bdd->prepare($sql);
+                $stmt->execute([
+                    ':nom' => $nom,
+                    ':prenom' => $prenom,
+                    ':poste' => $poste,
+                    ':email' => $email,
+                    ':telephone' => $telephone,
+                    ':mot_de_passe' => $mot_de_passe
+                ]);
+                // var_dump($stmt);
+                header("Location: gestion_administrateur.php?reussite_ajout=1");
+                exit();
+            } catch (PDOException $e) {
+                $message = "Erreur lors de l'ajout de l'administrateur' : " . $e->getMessage();
+            }
         }
     }
 
@@ -135,9 +147,6 @@
                 <form method="POST" style="display: inline;">
                     <button type="submit" name="ajouter_admin" class="action-button">Ajouter un administrateur</button>
                 </form><br><br>
-                <!-- <form method="POST" style="display: inline;">
-                    <button type="submit" name="supprimer_admin" class="action-button">Supprimer un administrateur</button>
-                </form> -->
                 <form method="POST" style="display: inline;">
                     <button type="submit" name="supprimer_admin" class="action-button" <?= !$est_super_admin ? 'disabled' : ''; ?>>
                         Supprimer un administrateur
