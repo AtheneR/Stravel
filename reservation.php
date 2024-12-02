@@ -3,7 +3,9 @@
 
     session_start();
 
+    // on vérifie si l'utilisateur est connecté
     if (!isset($_SESSION['user_id'])) {
+        // si l'utilisateur n'est pas connecté, on le redirige vers la page de connexion
         header('Location: connexion.php');
         exit();
     }
@@ -14,6 +16,7 @@
     $requete_connexion->execute(['id' => $user_id]);
     $user = $requete_connexion->fetch();
 
+    // on récupère les informations nécessaires plus tard
     $connexiongares = "SELECT id_gare, nom FROM gare";
     $requete_gares = $bdd->prepare($connexiongares);
     $requete_gares->execute();
@@ -29,12 +32,14 @@
     $reussite = null;
     $train_selectionne = isset($_POST['id_train']) && !empty($_POST['id_train']);
 
+    // on traite le cas où l'on appuie sur le bouton pour chercher des trains aux conditions entrées
     if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
         if ($_POST['action'] == "rechercher_train" && !$train_selectionne) {
             $gare_depart = $_POST['gare_depart'];
             $gare_arrivee = $_POST['gare_arrivee'];
             $jour_trajet = $_POST['jour_trajet'];
 
+            // on vérifie que la gare de départ et la gare d'arrivée sont différentes
             if ($gare_depart !== $gare_arrivee) {
                 $sql = "
                     SELECT t.*,
@@ -60,6 +65,8 @@
                     'jour_trajet' => $jour_trajet,
                 ]);
 
+                // on regarde s'il y a un train disponible ce jour-ci entre ces deux gares
+
                 $trains = $stmt->fetchAll();
 
                 if (empty($trains)) {
@@ -72,6 +79,50 @@
             $train_selectionne = true;
             $id_train = $_POST['id_train'];
             $jour_trajet = $_POST['jour_trajet'];
+        }
+    }
+
+    // on effectue la réservation du voyageur pour le trajet sélectionné
+    if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['id_train'], $_POST['jour_trajet'], $_POST['nom_voyageur'], $_POST['prenom_voyageur'], $_POST['date_naissance_voyageur'])) {
+        // on récupère les données entrées
+        $id_train = $_POST['id_train'];
+        $jour_trajet = $_POST['jour_trajet'];
+        $nom_voyageur = $_POST['nom_voyageur'];
+        $prenom_voyageur = $_POST['prenom_voyageur'];
+        $date_naissance_voyageur = $_POST['date_naissance_voyageur'];
+        // print_r($id_train);
+
+        $id_utilisateur = $_SESSION['user_id'];
+        // on génère un numéro de biller aléatoire, en vérifiant qu'il n'existe pas déjà dans la base de données, si c'est le cas on regénère jusqu'à en trouver un libre
+        do {
+            $numero_billet = mt_rand(100000000000, 999999999999);
+            
+            $requete = "SELECT COUNT(*) FROM reservation WHERE numero_billet = :numero_billet";
+            $stmt = $bdd->prepare($requete);
+            $stmt->execute(['numero_billet' => $numero_billet]);
+            $existe = $stmt->fetchColumn();
+        } while ($existe > 0);
+
+        // on effectue l'insertion dans la table
+        $sql = "INSERT INTO reservation (id_utilisateur, id_train, heure_achat, nom_voyageur, prenom_voyageur, date_naissance_voyageur, numero_billet, jour_trajet)
+                VALUES (:id_utilisateur, :id_train, NOW(), :nom_voyageur, :prenom_voyageur, :date_naissance_voyageur, :numero_billet, :jour_trajet)";
+
+        $stmt = $bdd->prepare($sql);
+        $stmt->execute([
+            'id_utilisateur' => $id_utilisateur,
+            'id_train' => $id_train,
+            'nom_voyageur' => $nom_voyageur,
+            'prenom_voyageur' => $prenom_voyageur,
+            'date_naissance_voyageur' => $date_naissance_voyageur,
+            'numero_billet' => $numero_billet,
+            'jour_trajet' => $jour_trajet,
+        ]);
+
+        if ($stmt->rowCount() > 0) {
+            header("Location: reservation.php?reussite=1");
+            exit();
+        } else {
+            echo "Erreur lors de la réservation.";
         }
     }
 ?>
@@ -95,9 +146,11 @@
 
 <div class="container">
     <div class="informations">
+        <!-- on affiche le message de réussite de réservation -->
         <?php if (isset($_GET['reussite']) && $_GET['reussite'] == 1): ?>
             <h3>Votre trajet a bien été réservé</h3>
         <?php else: ?>
+            <!-- on affiche le premier formulaire pour entrer ce qu'on recherche -->
             <?php if (!$trains && !$train_selectionne):?>
                 <form method="POST" action="">
                     <h2>Réservation</h2>
@@ -133,6 +186,7 @@
 
                 </form>
             <?php endif; ?>
+            <!-- une fois qu'on a entré ses critères on a un taleau avec la liste des trains disponibles -->
             <?php if ($trains && !$train_selectionne): ?>
                 <h2>Réservation</h2>
                     <table>
@@ -164,6 +218,7 @@
                         </tbody>
                     </table>
             <?php endif; ?>
+            <!-- une fois un train choisi on entre les informations du voyageur -->
             <?php if ($train_selectionne && !$reussite): ?>
                 <div id="formulaire-reservation" class="reservation-form">
                     <h3>Informations du voyageur</h3>
@@ -190,45 +245,3 @@
         <?php endif; ?>
     </div>
 </div>
-
-<?php
-    if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['id_train'], $_POST['jour_trajet'], $_POST['nom_voyageur'], $_POST['prenom_voyageur'], $_POST['date_naissance_voyageur'])) {
-        $id_train = $_POST['id_train'];
-        $jour_trajet = $_POST['jour_trajet'];
-        $nom_voyageur = $_POST['nom_voyageur'];
-        $prenom_voyageur = $_POST['prenom_voyageur'];
-        $date_naissance_voyageur = $_POST['date_naissance_voyageur'];
-        // print_r($id_train);
-
-        $id_utilisateur = $_SESSION['user_id'];
-        do {
-            $numero_billet = mt_rand(100000000000, 999999999999);
-            
-            $requete = "SELECT COUNT(*) FROM reservation WHERE numero_billet = :numero_billet";
-            $stmt = $bdd->prepare($requete);
-            $stmt->execute(['numero_billet' => $numero_billet]);
-            $existe = $stmt->fetchColumn();
-        } while ($existe > 0);
-
-        $sql = "INSERT INTO reservation (id_utilisateur, id_train, heure_achat, nom_voyageur, prenom_voyageur, date_naissance_voyageur, numero_billet, jour_trajet)
-                VALUES (:id_utilisateur, :id_train, NOW(), :nom_voyageur, :prenom_voyageur, :date_naissance_voyageur, :numero_billet, :jour_trajet)";
-
-        $stmt = $bdd->prepare($sql);
-        $stmt->execute([
-            'id_utilisateur' => $id_utilisateur,
-            'id_train' => $id_train,
-            'nom_voyageur' => $nom_voyageur,
-            'prenom_voyageur' => $prenom_voyageur,
-            'date_naissance_voyageur' => $date_naissance_voyageur,
-            'numero_billet' => $numero_billet,
-            'jour_trajet' => $jour_trajet,
-        ]);
-
-        if ($stmt->rowCount() > 0) {
-            header("Location: reservation.php?reussite=1");
-            exit();
-        } else {
-            echo "Erreur lors de la réservation.";
-        }
-    }
-?>
