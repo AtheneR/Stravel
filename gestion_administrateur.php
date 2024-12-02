@@ -3,7 +3,9 @@
     
     session_start();
 
+    // on vérifie si l'utilisateur est connecté
     if (!isset($_SESSION['user_id'])) {
+        // si l'utilisateur n'est pas connecté, on le redirige vers la page de connexion
         header('Location: connexion.php');
         exit();
     }
@@ -13,9 +15,11 @@
     $requete_connexion = $bdd->prepare($connexionadmin);
     $requete_connexion->execute(['id_administrateur' => $user_id]);
     $user = $requete_connexion->fetch();
-
+    
+    // on regarde si l'administrateur est super administrateur ou pas
     $est_super_admin = $user['poste'] === 'super_admin';
 
+    // on définit les variables nécessaires par la suite
     $message = "";
     $admin_details_suppr = null;
     $admin_details_suppr = null;
@@ -23,10 +27,13 @@
     $afficher_formulaire_ajout = isset($_POST['ajouter_admin']);
     $afficher_formulaire_suppr = isset($_POST['supprimer_admin']);
 
+    // on traite le cas où un adminstrateur clique sur le bouton pour supprimer un administrateur
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($afficher_formulaire_suppr)) {
         if (!$est_super_admin) {
+            // normalement un admin ne peut pas tomber dans ce cas car le bouton est désactivé pour lui mais on vérifie au cas où
             $message = "Les administrateurs non super-administrateurs ne peuvent pas supprimer d'administrateur.";
         } else {
+            // on récupère la liste des administrateurs
             $sql = "SELECT * FROM administrateur";
             $stmt = $bdd->prepare($sql);
             // var_dump($stmt);
@@ -38,6 +45,7 @@
         }
     }
 
+    // on traite l'ajout d'un utilisateur
     if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['valider'])) {
         $nom = $_POST['nom'];
         $prenom = $_POST['prenom'];
@@ -49,6 +57,7 @@
         $sql = "INSERT INTO administrateur(nom, prenom, poste, email, telephone, mot_de_passe, date_creation, date_derniere_connexion) VALUES (:nom,:prenom,:poste,:email,:telephone,:mot_de_passe,CURRENT_DATE(),CURRENT_DATE())";
         $bdd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
+        // on vérifie qu'aucun admin ou utilisateur est déjà enregistré avec cette adresse mail
         $req_admin = "SELECT * FROM administrateur WHERE email = :email";
         $verif_admin = $bdd->prepare($req_admin);
         $verif_admin->execute(['email' => $email]);
@@ -62,6 +71,7 @@
         if($u_verif || $a_verif){
             $message = 'Il y a déjà un compte lié à cet email.';
         } else {
+            // on effectue l'ajout 
             try {
                 $stmt = $bdd->prepare($sql);
                 $stmt->execute([
@@ -81,6 +91,7 @@
         }
     }
 
+    // on récupère les informations de l'administrateur sélectionné dans le tableau
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_administrateur']) && isset($_POST['suppr']) ) {
         // var_dump($_POST['id_administrateur']);
         $id_administrateur = $_POST['id_administrateur'];
@@ -94,6 +105,7 @@
         //var_dump($admin_details_suppr);
     }
 
+    // on traite la suppression de l'administrateur
     if (isset($_POST['suppression']) && !empty($_POST['id_administrateur'])) {
         $id_administrateur = $_POST['id_administrateur'];
         // var_dump($id_gare);
@@ -136,18 +148,21 @@
         <?php if ($message): ?>
             <p class="centre"><?= htmlspecialchars($message) ?></p>
         <?php endif; ?>
+        <!-- on affiche les messages après les actions -->
         <?php if (isset($_GET['reussite_ajout']) && $_GET['reussite_ajout'] == 1): ?>
             <h3>L'administrateur a bien été ajouté.</h3>
             <a href="gestion_administrateur.php" class="action-button">Retour</a>
         <?php elseif (isset($_GET['reussite_suppr']) && $_GET['reussite_suppr'] == 1): ?>
             <h3>L'administrateur a bien été supprimé.</h3>
             <a href="gestion_administrateur.php" class="action-button">Retour</a>
+        <!-- on affiche les différentes actions possibles -->
         <?php elseif (!$afficher_formulaire_ajout && !$afficher_formulaire_suppr && !$admin_details_suppr): ?>
             <div class="actions">
                 <form method="POST" style="display: inline;">
                     <button type="submit" name="ajouter_admin" class="action-button">Ajouter un administrateur</button>
                 </form><br><br>
                 <form method="POST" style="display: inline;">
+                    <!-- on désactive le bouton si l'utilisateur n'est pas un super admin -->
                     <button type="submit" name="supprimer_admin" class="action-button" <?= !$est_super_admin ? 'disabled' : ''; ?>>
                         Supprimer un administrateur
                     </button>
@@ -156,6 +171,7 @@
                     <br><p>Seul un super-administrateur peut supprimer un autre administrateur.</p>
                 </div>
             </div>
+        <!-- on affiche le formulaire d'ajout d'un administrateur -->
         <?php elseif($afficher_formulaire_ajout): ?>
             <form method="POST" action="gestion_administrateur.php">
                 <div class="form-group">
@@ -170,6 +186,7 @@
                     <label for="poste">Poste :</label><br>
                     <select id="poste" name="poste" required>
                         <option value="admin">Administrateur</option>
+                        <!-- si l'adminjstrateur n'est pas super administrateur il ne peut pas créer lui même de super administrateur -->
                         <option value="super_admin" <?= $est_super_admin ? '' : 'disabled'; ?>>Super-administrateur</option>
                     </select>
                     <div class="commentaire">
@@ -194,6 +211,7 @@
                     <a href="gestion_administrateur.php" class="action-button">Retour</a>
                 </div>
             </form>
+        <!-- on affiche un tableau avec la liste des administrateurs -->
         <?php elseif($afficher_formulaire_suppr && $est_super_admin): ?>
             <table>
                 <thead>
@@ -218,6 +236,7 @@
                     <?php endforeach; ?>
                 </tbody>
             </table>
+        <!-- on affiche les détails de l'administrateur choisi pour le supprimer -->
         <?php elseif ($admin_details_suppr): ?>
             <h3>Détails de l'administrateur</h3>
             <p>Nom : <?= htmlspecialchars($admin_details_suppr['nom']); ?></p>
