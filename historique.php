@@ -2,7 +2,9 @@
     include_once('header.php');
     session_start();
 
+    // on vérifie si l'utilisateur est connecté
     if (!isset($_SESSION['user_id'])) {
+        // si l'utilisateur n'est pas connecté, on le redirige vers la page de connexion
         header('Location: connexion.php');
         exit();
     }
@@ -13,11 +15,13 @@
     $requete_connexion->execute(['id' => $user_id]);
     $user = $requete_connexion->fetch();
 
+    // on initialise les variables pour les trains et les messages
     $trains = null;
     $message = "";
 
     $train_details = null;
 
+    // on vérifie si le formulaire a été soumis avec l'id du train, c'est le cas où on a cliqué dans la liste des trains passés pour voir ses informations
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_train'])) {
         $id_train = $_POST['id_train'];
         $sql_details = "
@@ -45,6 +49,7 @@
         ]);
         $train_details = $stmt_details->fetch();
     } else {
+        // on récupère la liste des trains passés de l'utilisateur
         $sql = "
             SELECT 
                 r.id_train, 
@@ -62,6 +67,8 @@
         $stmt = $bdd->prepare($sql);
         $stmt->execute(['user_id' => $user_id]);
         $trains = $stmt->fetchAll();
+
+        // on affiche un message s'il n'y a pas de réservation passée
         if (empty($trains)) {
             $message = "Vous n'avez pas effectué de réservation pour l'instant.";
         }
@@ -88,6 +95,7 @@
 <div class="container">
     <div class="informations">
         <h2>Votre historique</h2>
+        <!-- on affiche les détails du train qui a été sélectionné dans le tableau -->
         <?php if ($train_details): ?>
             <h3>Détails du trajet</h3>
             <p>Jour du trajet : <?= htmlspecialchars($train_details['jour_trajet']); ?></p>
@@ -100,7 +108,7 @@
             <p>Prénom du voyageur : <?= htmlspecialchars($train_details['prenom_voyageur']); ?></p>
             <p>Heure d'achat : <?= htmlspecialchars($train_details['heure_achat']); ?></p>
             <a href="historique.php">Retour à l'historique</a>
-
+        <!-- on affiche les trains passés qui ont été réservés par l'utilisateur connecté -->
         <?php elseif ($trains): ?>
             <table>
                 <thead>
@@ -128,7 +136,7 @@
                 </tbody>
             </table>
         <?php endif; ?>
-
+        <!-- on affiche les messages d'erreur s'il y en a -->
         <?php if ($message): ?>
             <p class="centre">
                 <?= htmlspecialchars($message); ?>
