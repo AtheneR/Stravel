@@ -1,8 +1,10 @@
 <?php
 	include_once('header.php');
-
     $message = '';
+
+    // on vérifie que tous les champs du formulaire sont remplis
     if (isset($_POST['email']) && isset($_POST['mot_de_passe']) && isset($_POST['nom']) && isset($_POST['prenom']) && isset($_POST['date_naissance']) && isset($_POST['telephone']) && isset($_POST['preference_communication'])){
+        // on hashe le mot de passe pour le stocker de manière sécurisée
         $mot_de_passe = password_hash($_POST['mot_de_passe'], PASSWORD_DEFAULT);
         $nom = $_POST['nom'];
         $prenom = $_POST['prenom'];
@@ -11,11 +13,13 @@
         $email = $_POST['email'];
         $preference_communication = $_POST['preference_communication'];
         
+        // on vérifie si l'email existe déjà dans la table utilisateur
         $req_inscrit = "SELECT * FROM utilisateur WHERE email = :email";
         $verif_inscrit = $bdd->prepare($req_inscrit);
         $verif_inscrit->execute(['email' => $email]);
         $user = $verif_inscrit->fetch();
 
+        // on vérifie si l'email existe déjà dans la table administrateur
         $req_admin = "SELECT * FROM administrateur WHERE email = :email";
         $verif_admin = $bdd->prepare($req_admin);
         $verif_admin->execute(['email' => $email]);
@@ -48,11 +52,15 @@
 
 <div class="container">
     <div class="informations">
+        <!-- formulaire d'inscription pour l'utilisateur -->
         <form method="POST" action="inscription_utilisateur.php">
             <h2>Inscription</h2>
+
+            <!-- on affiche un message d'erreur si la variable $message n'est pas vide -->
             <?php if (!empty($message)): ?>
                 <p style="color:red"><?= $message ?></p>
             <?php endif; ?>
+            
             <div>
                 <div>  
                     <label for="nom">Nom :</label><br>
