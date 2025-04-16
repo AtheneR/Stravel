@@ -40,3 +40,7 @@ Les comptes suivants sont déjà créés avec des insertions :
 Vous pouvez également créer votre propre compte via la page d'inscription.
 
 Je vous conseille de lancer la page "connexion.php" pour lancer le site.
+
+## Note
+
+Ce projet étant dans le cadre d'une évaluation en Techno Web Back End en L2 d'informatique, la note attribuée a été de 20/20.
